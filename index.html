@@ -1,1 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <!-- Настройки для правильного масштабирования на мобильных устройствах -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>B1 Course</title>
+    
+    <!-- Подключаем официальный SDK Телеграма -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <style>
+        body, html { 
+            margin: 0; padding: 0; 
+            background-color: #eef2f5; 
+            height: 100%; overflow: auto; 
+        }
+        .container { 
+            position: relative; 
+            width: 100%; 
+        }
+        img { 
+            width: 100%; 
+            display: block; 
+        }
+        /* Стиль для кликабельных зон */
+        .zone {
+            position: absolute;
+            background-color: rgba(255, 215, 0, 0.3); /* Желтая подсветка (потом уберем цвет) */
+            border: 2px dashed orange;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .hint {
+            position: fixed; bottom: 20px; left: 5%; width: 90%;
+            text-align: center; background: white; padding: 12px;
+            border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            font-weight: bold; font-family: sans-serif; box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Контейнер для страницы -->
+<div class="container" id="page-container">
+    <img id="page-image" src="" alt="Страница учебника">
+</div>
+
+<div class="hint">👆 Приблизь и нажми на задание</div>
+
+<script>
+    // Инициализируем Web App и разворачиваем на весь экран
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    // Бот передает страницу в ссылке: ?page=12. Достаем это число.
+    const params = new URLSearchParams(window.location.search);
+    const pageNum = params.get('page');
+
+    // Устанавливаем картинку (файл 12.jpg должен лежать в репозитории)
+    const img = document.getElementById('page-image');
+    if (pageNum) {
+        img.src = `${pageNum}.jpg`;
+    } else {
+        img.alt = "Ошибка: номер страницы не передан";
+    }
+
+    const container = document.getElementById('page-container');
+
+    // Функция, которая рисует кликабельную зону
+    function createZone(id, top, left, width, height) {
+        const zone = document.createElement('div');
+        zone.className = 'zone';
+        zone.style.top = top;
+        zone.style.left = left;
+        zone.style.width = width;
+        zone.style.height = height;
+        
+        zone.onclick = function() {
+            // При клике: отправляем номер задания в бота и закрываем окно!
+            tg.sendData(JSON.stringify({ exercise: id }));
+        };
+        container.appendChild(zone);
+    }
+
+    // РАЗМЕТКА ЗАДАНИЙ
+    // Если открыта 12-я страница, рисуем зоны для упражнений 5a и 6
+    if (pageNum === '12') {
+        createZone('5a', '8%', '5%', '90%', '18%');
+        createZone('6', '55%', '5%', '90%', '35%');
+    }
+</script>
+</body>
+</html>
 
