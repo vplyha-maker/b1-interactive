@@ -43,7 +43,7 @@
 
 <!-- Контейнер для страницы -->
 <div class="container" id="page-container">
-    <img id="page-image" src="" alt="Страница учебника">
+    <img id="page-image" src="" alt="Загрузка страницы...">
 </div>
 
 <div class="hint">👆 Приблизь и нажми на задание</div>
@@ -53,16 +53,18 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // Бот передает страницу в ссылке: ?page=12. Достаем это число.
+    // Бот передает страницу и зашифрованный путь к файлу в ссылке (?page=12&path=...)
     const params = new URLSearchParams(window.location.search);
     const pageNum = params.get('page');
+    const filePath = params.get('path');
 
-    // Устанавливаем картинку (файл 12.jpg должен лежать в репозитории)
+    // Устанавливаем картинку, используя наш прокси-сервер на Vercel
     const img = document.getElementById('page-image');
-    if (pageNum) {
-        img.src = `${pageNum}.jpg`;
+    if (filePath) {
+        // Обращаемся к api/image.js, который мы создадим в репозитории
+        img.src = `/api/image?path=${encodeURIComponent(filePath)}`;
     } else {
-        img.alt = "Ошибка: номер страницы не передан";
+        img.alt = "Ошибка: путь к картинке не найден";
     }
 
     const container = document.getElementById('page-container');
@@ -92,4 +94,3 @@
 </script>
 </body>
 </html>
-
