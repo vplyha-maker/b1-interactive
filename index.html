@@ -26,7 +26,7 @@
         /* Стиль для кликабельных зон */
         .zone {
             position: absolute;
-            background-color: rgba(255, 215, 0, 0.3); /* Желтая подсветка (потом уберем цвет) */
+            background-color: rgba(255, 215, 0, 0.3); /* Желтая подсветка */
             border: 2px dashed orange;
             border-radius: 8px;
             cursor: pointer;
@@ -61,13 +61,14 @@
     // Устанавливаем картинку, используя наш прокси-сервер на Vercel
     const img = document.getElementById('page-image');
     if (filePath) {
-        // Обращаемся к api/image.js, который мы создадим в репозитории
+        // Обращаемся к api/image.js
         img.src = `/api/image?path=${encodeURIComponent(filePath)}`;
     } else {
         img.alt = "Ошибка: путь к картинке не найден";
     }
 
     const container = document.getElementById('page-container');
+    const hintElement = document.querySelector('.hint');
 
     // Функция, которая рисует кликабельную зону
     function createZone(id, top, left, width, height) {
@@ -78,18 +79,52 @@
         zone.style.width = width;
         zone.style.height = height;
         
-        zone.onclick = function() {
+        zone.onclick = function(e) {
+            e.stopPropagation(); // Чтобы клик по зоне не вызывал тап по картинке
             // При клике: отправляем номер задания в бота и закрываем окно!
             tg.sendData(JSON.stringify({ exercise: id }));
         };
         container.appendChild(zone);
     }
 
+    // ==========================================
+    // РЕЖИМ РАЗМЕТКИ: КЛИКАЙ И ПОЛУЧАЙ КОД
+    // ==========================================
+    let firstClick = null;
+
+    img.onclick = function(e) {
+        // Вычисляем проценты на основе тапа
+        const rect = img.getBoundingClientRect();
+        const xPercent = ((e.clientX - rect.left) / rect.width) * 100;
+        const yPercent = ((e.clientY - rect.top) / rect.height) * 100;
+
+        if (!firstClick) {
+            // Первый тап - левый верхний угол задания
+            firstClick = { x: xPercent, y: yPercent };
+            hintElement.innerText = "📍 Теперь нажми в правый нижний угол задания";
+            hintElement.style.backgroundColor = "#fff3cd"; // Плашка желтеет
+        } else {
+            // Второй тап - правый нижний угол, считаем рамку
+            const width = Math.abs(xPercent - firstClick.x);
+            const height = Math.abs(yPercent - firstClick.y);
+            const top = Math.min(yPercent, firstClick.y);
+            const left = Math.min(xPercent, firstClick.x);
+            
+            // Выводим готовую строчку кода!
+            const codeStr = `createZone('НОМЕР', '${top.toFixed(1)}%', '${left.toFixed(1)}%', '${width.toFixed(1)}%', '${height.toFixed(1)}%');`;
+            
+            hintElement.innerText = codeStr;
+            hintElement.style.backgroundColor = "#d1e7dd"; // Плашка зеленеет
+            firstClick = null; // Сбрасываем для следующего тапа
+        }
+    };
+
+    // ==========================================
     // РАЗМЕТКА ЗАДАНИЙ
-    // Если открыта 12-я страница, рисуем зоны для упражнений 5a и 6
+    // ==========================================
     if (pageNum === '12') {
-        createZone('5a', '8%', '5%', '90%', '18%');
-        createZone('6', '55%', '5%', '90%', '35%');
+        createZone('5a', '8.0%', '5.0%', '90.0%', '18.0%');
+        createZone('6', '55.0%', '5.0%', '90.0%', '35.0%');
     }
 </script>
 </body>
